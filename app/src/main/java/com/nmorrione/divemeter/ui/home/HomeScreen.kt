@@ -38,10 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.MapType
 import com.nmorrione.divemeter.R
 import com.nmorrione.divemeter.ui.map.DiveMapView
 import com.nmorrione.divemeter.ui.map.MapMarker
@@ -61,7 +64,7 @@ fun HomeScreen(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var centerOverride by remember { mutableStateOf<LatLng?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
-    var mapType by remember { mutableStateOf(MapType.NORMAL) }
+    var mapType by remember { mutableStateOf(GoogleMap.MAP_TYPE_NORMAL) }
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -104,49 +107,57 @@ fun HomeScreen(
             mapType = mapType
         )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
+        // Rendered in a real, separate Android window (not just a Compose overlay layer).
+        // The full-screen GoogleMap AndroidView below competes for touch/IME focus with any
+        // Compose content placed directly on top of it in the same window; a focusable Popup
+        // sidesteps that entirely since it owns its own window-level input focus.
+        Popup(
+            alignment = Alignment.TopCenter,
+            properties = PopupProperties(focusable = true, dismissOnClickOutside = false)
         ) {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                shadowElevation = 4.dp,
-                tonalElevation = 2.dp
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.search_spots_hint)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp)
-                )
-            }
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    shadowElevation = 4.dp,
+                    tonalElevation = 2.dp
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.search_spots_hint)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                }
 
-            if (searchQuery.isNotBlank()) {
-                Card(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                    if (searchResults.isNotEmpty()) {
-                        Column {
-                            searchResults.forEach { dive ->
-                                ListItem(
-                                    headlineContent = { Text(dive.spotName) },
-                                    supportingContent = { Text("${dive.heightMeters} m") },
-                                    modifier = Modifier.clickable {
-                                        centerOverride = LatLng(dive.latitude, dive.longitude)
-                                        searchQuery = ""
-                                    }
-                                )
+                if (searchQuery.isNotBlank()) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                        if (searchResults.isNotEmpty()) {
+                            Column {
+                                searchResults.forEach { dive ->
+                                    ListItem(
+                                        headlineContent = { Text(dive.spotName) },
+                                        supportingContent = { Text("${dive.heightMeters} m") },
+                                        modifier = Modifier.clickable {
+                                            centerOverride = LatLng(dive.latitude, dive.longitude)
+                                            searchQuery = ""
+                                        }
+                                    )
+                                }
                             }
+                        } else {
+                            Text(
+                                text = stringResource(R.string.search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(16.dp)
+                            )
                         }
-                    } else {
-                        Text(
-                            text = stringResource(R.string.search_no_results, searchQuery),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
                     }
                 }
             }
@@ -154,10 +165,15 @@ fun HomeScreen(
 
         Surface(
             onClick = {
-                mapType = if (mapType == MapType.NORMAL) MapType.HYBRID else MapType.NORMAL
+                mapType = if (mapType == GoogleMap.MAP_TYPE_NORMAL) {
+                    GoogleMap.MAP_TYPE_HYBRID
+                } else {
+                    GoogleMap.MAP_TYPE_NORMAL
+                }
             },
             modifier = Modifier
                 .align(Alignment.TopEnd)
+                .zIndex(1f)
                 .padding(top = 84.dp, end = 16.dp)
                 .size(48.dp),
             shape = RoundedCornerShape(14.dp),
@@ -193,6 +209,7 @@ fun HomeScreen(
             onClick = { showAddSheet = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .zIndex(1f)
                 .padding(24.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_dive_fab_description))
