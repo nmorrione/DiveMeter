@@ -26,7 +26,19 @@
     <string name="manual_entry_save">Save dive</string>
     <string name="manual_entry_title">Manual entry</string>
 
-    <!-- Video calc placeholder -->
+    <!-- Video calc -->
     <string name="video_calc_title">Video calculation</string>
-    <string name="video_calc_coming_soon">Video capture and fall-timing are coming in the next update.</string>
+    <string name="video_calc_choose_video">Choose a video</string>
+    <string name="video_calc_choose_video_hint">Pick a video of the dive — a person or object falling from the platform into the water. Slow-motion, shot with your phone\'s camera app, gives the most accurate result.</string>
+    <string name="video_calc_change_video">Change video</string>
+    <string name="video_calc_mark_apex">Mark apex</string>
+    <string name="video_calc_apex_marked">Apex: %1$s</string>
+    <string name="video_calc_mark_entry">Mark water entry</string>
+    <string name="video_calc_entry_marked">Entry: %1$s</string>
+    <string name="video_calc_step_back">Step back</string>
+    <string name="video_calc_step_forward">Step forward</string>
+    <string name="video_calc_play_pause">Play or pause</string>
+    <string name="video_calc_apex_hint">Mark the apex — the highest point of the trajectory, where the diver is momentarily still — not the moment they leave the platform. That\'s what makes the free-fall calculation accurate.</string>
+    <string name="video_calc_estimated_height">Estimated height: %1$s m</string>
+    <string name="video_calc_entry_before_apex">Water entry must be marked after the apex</string>
 </resources>
