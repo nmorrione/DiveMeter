@@ -1,12 +1,14 @@
 package com.nmorrione.divemeter.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,17 +17,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -43,9 +48,13 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.nmorrione.divemeter.R
+import com.nmorrione.divemeter.data.Dive
 import com.nmorrione.divemeter.ui.map.DiveMapView
 import com.nmorrione.divemeter.ui.map.MapMarker
 
@@ -53,6 +62,7 @@ private val DEFAULT_CENTER = LatLng(41.9028, 12.4964) // Rome — used only unti
 private const val OVERVIEW_ZOOM = 12f
 private const val FOCUSED_ZOOM = 16f
 
+@SuppressLint("MissingPermission") // guarded by hasLocationPermission before every fused-location call
 @Composable
 fun HomeScreen(
     onNavigateToManualEntry: () -> Unit,
@@ -62,7 +72,9 @@ fun HomeScreen(
     val context = LocalContext.current
     val dives by viewModel.dives.collectAsState()
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
     var centerOverride by remember { mutableStateOf<LatLng?>(null) }
+    var mapZoomOverride by remember { mutableStateOf<Float?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
     var mapType by remember { mutableStateOf(GoogleMap.MAP_TYPE_NORMAL) }
     var hasLocationPermission by remember {
@@ -79,11 +91,15 @@ fun HomeScreen(
         if (!hasLocationPermission) permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    val fusedClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val cancellationTokenSource = remember { CancellationTokenSource() }
+    DisposableEffect(Unit) { onDispose { cancellationTokenSource.cancel() } }
+
     val lastDive = dives.firstOrNull()
     val mapCenter = centerOverride
         ?: lastDive?.let { LatLng(it.latitude, it.longitude) }
         ?: DEFAULT_CENTER
-    val mapZoom = if (centerOverride != null) FOCUSED_ZOOM else OVERVIEW_ZOOM
+    val mapZoom = mapZoomOverride ?: if (centerOverride != null) FOCUSED_ZOOM else OVERVIEW_ZOOM
 
     val searchResults = remember(searchQuery, dives) {
         if (searchQuery.isBlank()) emptyList() else dives.filter {
@@ -107,58 +123,46 @@ fun HomeScreen(
             mapType = mapType
         )
 
-        // Rendered in a real, separate Android window (not just a Compose overlay layer).
-        // The full-screen GoogleMap AndroidView below competes for touch/IME focus with any
-        // Compose content placed directly on top of it in the same window; a focusable Popup
-        // sidesteps that entirely since it owns its own window-level input focus.
-        Popup(
-            alignment = Alignment.TopCenter,
-            properties = PopupProperties(focusable = true, dismissOnClickOutside = false)
-        ) {
-            Column(
+        if (isSearchActive) {
+            // A focusable Popup gets its own window-level input focus, which is what makes
+            // typing actually work here — but a focusable Popup is also touch-modal for the
+            // whole screen, so it must only exist while the user is actively searching.
+            // Outside of that, this same area is a plain clickable row (see below) that lets
+            // touches reach the map underneath, so panning/pinch-zoom and the FAB keep working.
+            SearchPopup(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                results = searchResults,
+                onResultClick = { dive ->
+                    centerOverride = LatLng(dive.latitude, dive.longitude)
+                    mapZoomOverride = FOCUSED_ZOOM
+                    searchQuery = ""
+                    isSearchActive = false
+                },
+                onDismiss = { isSearchActive = false }
+            )
+        } else {
+            Surface(
+                onClick = { isSearchActive = true },
                 modifier = Modifier
+                    .align(Alignment.TopCenter)
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .zIndex(1f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(28.dp),
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp
             ) {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    shadowElevation = 4.dp,
-                    tonalElevation = 2.dp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(stringResource(R.string.search_spots_hint)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(28.dp)
+                    Icon(Icons.Default.Search, contentDescription = null)
+                    Text(
+                        text = searchQuery.ifBlank { stringResource(R.string.search_spots_hint) },
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 12.dp)
                     )
-                }
-
-                if (searchQuery.isNotBlank()) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                        if (searchResults.isNotEmpty()) {
-                            Column {
-                                searchResults.forEach { dive ->
-                                    ListItem(
-                                        headlineContent = { Text(dive.spotName) },
-                                        supportingContent = { Text("${dive.heightMeters} m") },
-                                        modifier = Modifier.clickable {
-                                            centerOverride = LatLng(dive.latitude, dive.longitude)
-                                            searchQuery = ""
-                                        }
-                                    )
-                                }
-                            }
-                        } else {
-                            Text(
-                                text = stringResource(R.string.search_no_results, searchQuery),
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -205,6 +209,37 @@ fun HomeScreen(
             }
         }
 
+        if (hasLocationPermission) {
+            Surface(
+                onClick = {
+                    fusedClient.getCurrentLocation(
+                        Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                        cancellationTokenSource.token
+                    ).addOnSuccessListener { location ->
+                        if (location != null) {
+                            centerOverride = LatLng(location.latitude, location.longitude)
+                            mapZoomOverride = FOCUSED_ZOOM
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .zIndex(1f)
+                    .padding(end = 24.dp, bottom = 92.dp)
+                    .size(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.MyLocation,
+                        contentDescription = stringResource(R.string.manual_entry_use_current_location)
+                    )
+                }
+            }
+        }
+
         FloatingActionButton(
             onClick = { showAddSheet = true },
             modifier = Modifier
@@ -228,5 +263,69 @@ fun HomeScreen(
                 onNavigateToVideoCalc()
             }
         )
+    }
+}
+
+@Composable
+private fun SearchPopup(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    results: List<Dive>,
+    onResultClick: (Dive) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    Popup(
+        alignment = Alignment.TopCenter,
+        properties = PopupProperties(focusable = true, dismissOnClickOutside = true, dismissOnBackPress = true),
+        onDismissRequest = onDismiss
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp
+            ) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    placeholder = { Text(stringResource(R.string.search_spots_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(28.dp)
+                )
+            }
+
+            if (query.isNotBlank()) {
+                Card(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                    if (results.isNotEmpty()) {
+                        Column {
+                            results.forEach { dive ->
+                                ListItem(
+                                    headlineContent = { Text(dive.spotName) },
+                                    supportingContent = { Text("${dive.heightMeters} m") },
+                                    modifier = Modifier.clickable { onResultClick(dive) }
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.search_no_results, query),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }

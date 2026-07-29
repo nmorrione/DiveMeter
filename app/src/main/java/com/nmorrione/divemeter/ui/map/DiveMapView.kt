@@ -90,7 +90,10 @@ fun DiveMapView(
     LaunchedEffect(mapView) {
         mapView.getMapAsync { map ->
             map.uiSettings.isZoomControlsEnabled = false
-            map.uiSettings.isMyLocationButtonEnabled = hasLocationPermission
+            // The SDK's own my-location button is placed by the SDK itself and can't be
+            // repositioned declaratively; the app provides its own button instead, so this
+            // only enables the blue "you are here" dot on the map.
+            map.uiSettings.isMyLocationButtonEnabled = false
             map.isMyLocationEnabled = hasLocationPermission
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(center, zoom))
             disableFocusRecursively(mapView)
