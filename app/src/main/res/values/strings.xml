@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DiveMeter</string>
+
+    <!-- Home -->
+    <string name="search_spots_hint">Search a saved spot…</string>
+    <string name="add_dive_fab_description">Add a new dive</string>
+    <string name="no_spots_saved_yet">No dives saved yet. Tap + to add your first one.</string>
+
+    <!-- Add dive sheet -->
+    <string name="add_dive_title">Add a dive</string>
+    <string name="method_manual_title">Manual entry</string>
+    <string name="method_manual_description">Type the height yourself</string>
+    <string name="method_video_title">Video calculation</string>
+    <string name="method_video_description">Time the fall from a video and add spot details</string>
+    <string name="method_barometer_title">Barometer</string>
+    <string name="method_barometer_description">Locked — coming in a future update</string>
+
+    <!-- Manual entry -->
+    <string name="manual_entry_spot_name">Spot name</string>
+    <string name="manual_entry_height">Height (meters)</string>
+    <string name="manual_entry_pick_location">Pick location on map</string>
+    <string name="manual_entry_save">Save dive</string>
+    <string name="manual_entry_title">Manual entry</string>
+
+    <!-- Video calc placeholder -->
+    <string name="video_calc_title">Video calculation</string>
+    <string name="video_calc_coming_soon">Video capture and fall-timing are coming in the next update.</string>
+</resources>
