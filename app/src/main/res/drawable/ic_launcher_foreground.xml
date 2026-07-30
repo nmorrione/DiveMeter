@@ -1,20 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Diver silhouette entering water -->
+    <!-- Sky -->
+    <path android:pathData="M0,0 H108 V108 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="76"
+                android:centerY="32"
+                android:gradientRadius="100"
+                android:startColor="#1B5FC4"
+                android:endColor="#0A3878" />
+        </aapt:attr>
+    </path>
+    <!-- Cliff, bigger and simpler so it reads clearly at real icon size -->
+    <path android:pathData="M0,0 L46,0 L36,22 L42,40 L28,58 L38,76 L24,94 L32,108 L0,108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="46"
+                android:endY="108"
+                android:startColor="#E8CFA6"
+                android:endColor="#9C6E42" />
+        </aapt:attr>
+    </path>
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,24 a7,7 0 1,0 0.1,0 Z" />
+        android:pathData="M46,0 L36,22 L42,40 L28,58 L38,76 L24,94 L32,108"
+        android:strokeColor="#F5E3C4"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.7"
+        android:fillColor="#00000000" />
+    <!-- Diver, tiny, flying flat "death dive" pose, head right / legs left -->
+    <path android:fillColor="#FDFEFF" android:pathData="M74,35 m-2,0 a2,2 0,1,0 4,0 a2,2 0,1,0 -4,0" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,34 L54,58 L40,72"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="6"
-        android:strokeLineCap="round" />
+        android:pathData="M72,35 Q68,37 65,36"
+        android:strokeColor="#EAF4FF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
     <path
-        android:fillColor="#4FC3F7"
-        android:pathData="M18,80 Q27,72 36,80 T54,80 T72,80 T90,80 L90,92 L18,92 Z" />
+        android:pathData="M72,35 Q70,31 68,28"
+        android:strokeColor="#FDFEFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M72,35 Q70,39 68,42"
+        android:strokeColor="#D8E9FB"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M65,36 Q62,33 60,31"
+        android:strokeColor="#FDFEFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M65,36 Q62,39 60,42"
+        android:strokeColor="#D8E9FB"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <!-- Water -->
+    <path android:pathData="M0,86 Q54,76 108,86 L108,108 L0,108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="76"
+                android:endX="54"
+                android:endY="108"
+                android:startColor="#2E93EA"
+                android:endColor="#0B3C87" />
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M0,88 Q54,78 108,88"
+        android:strokeColor="#8ED0FF"
+        android:strokeWidth="3"
+        android:strokeAlpha="0.85"
+        android:fillColor="#00000000" />
 </vector>
