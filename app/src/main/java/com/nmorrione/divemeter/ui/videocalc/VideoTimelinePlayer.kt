@@ -39,6 +39,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.nmorrione.divemeter.R
@@ -88,11 +89,28 @@ fun VideoTimelinePlayer(
     var isPlaying by remember { mutableStateOf(false) }
     var currentPositionMs by remember { mutableLongStateOf(0L) }
     var durationMs by remember { mutableLongStateOf(0L) }
+    // Default to portrait (9:16) since most dive footage is shot with the phone held upright;
+    // this is replaced as soon as the real decoded size — landscape or portrait — is known.
+    var videoAspectRatio by remember { mutableStateOf(9f / 16f) }
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 isPlaying = playing
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                val width = videoSize.width
+                val height = videoSize.height
+                if (width > 0 && height > 0) {
+                    // A 90/270 rotation means the decoded buffer is sideways relative to how
+                    // it's actually displayed, so width/height must be swapped for the ratio.
+                    videoAspectRatio = if (videoSize.unappliedRotationDegrees % 180 != 0) {
+                        height.toFloat() / width.toFloat()
+                    } else {
+                        width.toFloat() / height.toFloat()
+                    }
+                }
             }
         }
         exoPlayer.addListener(listener)
@@ -115,7 +133,7 @@ fun VideoTimelinePlayer(
                     useController = false
                 }
             },
-            modifier = Modifier.fillMaxWidth().aspectRatio(9f / 16f)
+            modifier = Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)
         )
 
         Slider(

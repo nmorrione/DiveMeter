@@ -3,6 +3,7 @@ package com.nmorrione.divemeter.ui.map
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable
@@ -28,7 +29,8 @@ import com.google.android.gms.maps.model.MarkerOptions
 data class MapMarker(
     val position: LatLng,
     val title: String,
-    val snippet: String? = null
+    val snippet: String? = null,
+    val id: Long? = null
 )
 
 // The Maps SDK adds its own internal focusable child views (gesture/render surfaces) after
@@ -53,6 +55,7 @@ fun DiveMapView(
     zoom: Float = 14f,
     markers: List<MapMarker> = emptyList(),
     onMapTap: ((LatLng) -> Unit)? = null,
+    onMarkerClick: ((Long) -> Unit)? = null,
     showMyLocation: Boolean = false,
     mapType: Int = GoogleMap.MAP_TYPE_NORMAL
 ) {
@@ -70,6 +73,17 @@ fun DiveMapView(
             isFocusable = false
             isFocusableInTouchMode = false
             onCreate(null)
+            // Mini-maps are often embedded inside a scrollable Column (e.g. the entry forms).
+            // Without this, a vertical drag that starts on the map is intercepted by the
+            // parent scroll container instead of panning the map.
+            setOnTouchListener { v, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> v.parent?.requestDisallowInterceptTouchEvent(true)
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                        v.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+                false
+            }
         }
     }
     var googleMap by remember { mutableStateOf<GoogleMap?>(null) }
@@ -105,6 +119,18 @@ fun DiveMapView(
         googleMap?.setOnMapClickListener { latLng -> onMapTap?.invoke(latLng) }
     }
 
+    LaunchedEffect(googleMap, onMarkerClick) {
+        googleMap?.setOnMarkerClickListener { marker ->
+            val id = marker.tag as? Long
+            if (id != null && onMarkerClick != null) {
+                onMarkerClick(id)
+                true // consumed: skip the default info window and the SDK's own re-center/zoom
+            } else {
+                false
+            }
+        }
+    }
+
     LaunchedEffect(googleMap, mapType) {
         googleMap?.mapType = mapType
     }
@@ -122,7 +148,7 @@ fun DiveMapView(
                     .position(marker.position)
                     .title(marker.title)
                     .snippet(marker.snippet)
-            )
+            )?.tag = marker.id
         }
     }
 

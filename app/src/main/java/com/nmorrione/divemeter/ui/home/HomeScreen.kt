@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ private const val FOCUSED_ZOOM = 16f
 fun HomeScreen(
     onNavigateToManualEntry: () -> Unit,
     onNavigateToVideoCalc: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -76,6 +78,7 @@ fun HomeScreen(
     var centerOverride by remember { mutableStateOf<LatLng?>(null) }
     var mapZoomOverride by remember { mutableStateOf<Float?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
+    var selectedDiveId by remember { mutableStateOf<Long?>(null) }
     var mapType by remember { mutableStateOf(GoogleMap.MAP_TYPE_NORMAL) }
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -95,8 +98,20 @@ fun HomeScreen(
     val cancellationTokenSource = remember { CancellationTokenSource() }
     DisposableEffect(Unit) { onDispose { cancellationTokenSource.cancel() } }
 
+    // The app always opens on the user's current position, not the last saved dive.
+    var currentDeviceLocation by remember { mutableStateOf<LatLng?>(null) }
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            fusedClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, cancellationTokenSource.token)
+                .addOnSuccessListener { location ->
+                    if (location != null) currentDeviceLocation = LatLng(location.latitude, location.longitude)
+                }
+        }
+    }
+
     val lastDive = dives.firstOrNull()
     val mapCenter = centerOverride
+        ?: currentDeviceLocation
         ?: lastDive?.let { LatLng(it.latitude, it.longitude) }
         ?: DEFAULT_CENTER
     val mapZoom = mapZoomOverride ?: if (centerOverride != null) FOCUSED_ZOOM else OVERVIEW_ZOOM
@@ -116,9 +131,11 @@ fun HomeScreen(
                 MapMarker(
                     position = LatLng(dive.latitude, dive.longitude),
                     title = dive.spotName,
-                    snippet = "${dive.heightMeters} m"
+                    snippet = "${dive.heightMeters} m",
+                    id = dive.id
                 )
             },
+            onMarkerClick = { id -> selectedDiveId = id },
             showMyLocation = hasLocationPermission,
             mapType = mapType
         )
@@ -164,6 +181,25 @@ fun HomeScreen(
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 }
+            }
+        }
+
+        Surface(
+            onClick = onNavigateToSettings,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .zIndex(1f)
+                .padding(top = 84.dp, start = 16.dp)
+                .size(48.dp),
+            shape = RoundedCornerShape(14.dp),
+            shadowElevation = 4.dp,
+            tonalElevation = 2.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.settings_title)
+                )
             }
         }
 
@@ -263,6 +299,11 @@ fun HomeScreen(
                 onNavigateToVideoCalc()
             }
         )
+    }
+
+    val selectedDive = dives.firstOrNull { it.id == selectedDiveId }
+    if (selectedDive != null) {
+        DiveDetailSheet(dive = selectedDive, onDismiss = { selectedDiveId = null })
     }
 }
 

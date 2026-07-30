@@ -25,6 +25,22 @@
     <string name="manual_entry_use_current_location">Use current location</string>
     <string name="manual_entry_save">Save dive</string>
     <string name="manual_entry_title">Manual entry</string>
+    <string name="location_search_hint">Search a place…</string>
+    <string name="location_search_not_found">Place not found</string>
+    <string name="location_unavailable">Couldn\'t get your location</string>
+    <string name="dive_description">Description (optional)</string>
+    <string name="dive_rating">Rate this spot</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Welcome to DiveMeter</string>
+    <string name="onboarding_hint">Pick a nickname so other divers can see who added a spot. You can change it later from Settings.</string>
+    <string name="onboarding_nickname_label">Nickname</string>
+    <string name="onboarding_continue">Continue</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_nickname_label">Nickname</string>
+    <string name="settings_save">Save</string>
 
     <!-- Video calc -->
     <string name="video_calc_title">Video calculation</string>
@@ -41,4 +57,13 @@
     <string name="video_calc_apex_hint">Mark the apex — the highest point of the trajectory, where the diver is momentarily still — not the moment they leave the platform. That\'s what makes the free-fall calculation accurate.</string>
     <string name="video_calc_estimated_height">Estimated height: %1$s m</string>
     <string name="video_calc_entry_before_apex">Water entry must be marked after the apex</string>
+
+    <!-- Dive detail -->
+    <string name="dive_detail_height">Height: %1$s m</string>
+    <string name="dive_detail_method_manual">Manual entry</string>
+    <string name="dive_detail_method_video">Video calculation</string>
+    <string name="dive_detail_method_barometer">Barometer</string>
+    <string name="dive_detail_added_by_on">Added by %1$s on %2$s</string>
+    <string name="dive_detail_unknown_user">a diver</string>
+    <string name="dive_detail_close">Close</string>
 </resources>

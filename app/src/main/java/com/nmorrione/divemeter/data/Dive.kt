@@ -18,5 +18,8 @@ data class Dive(
     val longitude: Double,
     val timestampMillis: Long,
     val method: DiveMethod,
-    val videoUri: String? = null
+    val videoUri: String? = null,
+    val description: String = "",
+    val rating: Int = 0,
+    val ownerNickname: String = ""
 )

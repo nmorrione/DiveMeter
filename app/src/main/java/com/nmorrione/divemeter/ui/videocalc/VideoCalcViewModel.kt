@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.nmorrione.divemeter.data.Dive
 import com.nmorrione.divemeter.data.DiveMeterDatabase
 import com.nmorrione.divemeter.data.DiveMethod
+import com.nmorrione.divemeter.data.UserPreferences
 import kotlinx.coroutines.launch
 
 class VideoCalcViewModel(application: Application) : AndroidViewModel(application) {
@@ -18,6 +19,8 @@ class VideoCalcViewModel(application: Application) : AndroidViewModel(applicatio
         latitude: Double,
         longitude: Double,
         videoUri: String,
+        description: String,
+        rating: Int,
         onSaved: () -> Unit
     ) {
         viewModelScope.launch {
@@ -29,7 +32,10 @@ class VideoCalcViewModel(application: Application) : AndroidViewModel(applicatio
                     longitude = longitude,
                     timestampMillis = System.currentTimeMillis(),
                     method = DiveMethod.VIDEO,
-                    videoUri = videoUri
+                    videoUri = videoUri,
+                    description = description,
+                    rating = rating,
+                    ownerNickname = UserPreferences.getNickname(getApplication<Application>()) ?: ""
                 )
             )
             onSaved()
