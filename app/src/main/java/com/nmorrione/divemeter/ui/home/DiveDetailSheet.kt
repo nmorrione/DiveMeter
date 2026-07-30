@@ -1,18 +1,25 @@
 package com.nmorrione.divemeter.ui.home
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.nmorrione.divemeter.R
@@ -28,6 +35,7 @@ import java.util.Locale
 @Composable
 fun DiveDetailSheet(dive: Dive, onDismiss: () -> Unit, onDelete: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
     val isOwner = dive.ownerId.isNotEmpty() && dive.ownerId == DiveRepository.currentUserId()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
@@ -77,8 +85,24 @@ fun DiveDetailSheet(dive: Dive, onDismiss: () -> Unit, onDelete: () -> Unit) {
                 text = stringResource(R.string.dive_detail_added_by_on, ownerLabel, dateLabel),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 16.dp, bottom = if (isOwner) 8.dp else 24.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
+
+            OutlinedButton(
+                onClick = {
+                    val uri = Uri.parse(
+                        "https://www.google.com/maps/dir/?api=1&destination=${dive.latitude},${dive.longitude}"
+                    )
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                },
+                modifier = Modifier.fillMaxWidth().padding(bottom = if (isOwner) 8.dp else 24.dp)
+            ) {
+                Icon(Icons.Default.Directions, contentDescription = null)
+                Text(
+                    text = stringResource(R.string.dive_detail_get_directions),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
 
             if (isOwner) {
                 Button(
