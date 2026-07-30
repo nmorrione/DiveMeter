@@ -25,8 +25,6 @@
     <string name="manual_entry_use_current_location">Use current location</string>
     <string name="manual_entry_save">Save dive</string>
     <string name="manual_entry_title">Manual entry</string>
-    <string name="location_search_hint">Search a place…</string>
-    <string name="location_search_not_found">Place not found</string>
     <string name="location_unavailable">Couldn\'t get your location</string>
     <string name="dive_description">Description (optional)</string>
     <string name="dive_rating">Rate this spot</string>
