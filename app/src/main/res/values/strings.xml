@@ -34,6 +34,9 @@
     <string name="onboarding_hint">Pick a nickname so other divers can see who added a spot. You can change it later from Settings.</string>
     <string name="onboarding_nickname_label">Nickname</string>
     <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_nickname_taken">That nickname is already taken — try another one</string>
+    <string name="sign_in_failed">Couldn\'t connect to the shared database. Check your internet connection.</string>
+    <string name="retry">Retry</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -64,4 +67,5 @@
     <string name="dive_detail_added_by_on">Added by %1$s on %2$s</string>
     <string name="dive_detail_unknown_user">a diver</string>
     <string name="dive_detail_close">Close</string>
+    <string name="dive_detail_delete">Delete this spot</string>
 </resources>

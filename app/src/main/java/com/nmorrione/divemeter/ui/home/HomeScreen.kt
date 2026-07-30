@@ -73,6 +73,9 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val dives by viewModel.dives.collectAsState()
+    // Re-fires every time this screen is (re)entered — including returning from Manual
+    // Entry/Video Calc — since the ViewModel outlives navigation but this composable doesn't.
+    LaunchedEffect(Unit) { viewModel.refresh() }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
     var centerOverride by remember { mutableStateOf<LatLng?>(null) }
@@ -303,7 +306,14 @@ fun HomeScreen(
 
     val selectedDive = dives.firstOrNull { it.id == selectedDiveId }
     if (selectedDive != null) {
-        DiveDetailSheet(dive = selectedDive, onDismiss = { selectedDiveId = null })
+        DiveDetailSheet(
+            dive = selectedDive,
+            onDismiss = { selectedDiveId = null },
+            onDelete = {
+                viewModel.deleteDive(selectedDive.id)
+                selectedDiveId = null
+            }
+        )
     }
 }
 

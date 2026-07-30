@@ -1,17 +1,12 @@
 package com.nmorrione.divemeter.ui.manualentry
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nmorrione.divemeter.data.Dive
-import com.nmorrione.divemeter.data.DiveMeterDatabase
 import com.nmorrione.divemeter.data.DiveMethod
-import com.nmorrione.divemeter.data.UserPreferences
+import com.nmorrione.divemeter.data.DiveRepository
 import kotlinx.coroutines.launch
 
-class ManualEntryViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val diveDao = DiveMeterDatabase.getInstance(application).diveDao()
+class ManualEntryViewModel : ViewModel() {
 
     fun saveDive(
         spotName: String,
@@ -20,21 +15,19 @@ class ManualEntryViewModel(application: Application) : AndroidViewModel(applicat
         longitude: Double,
         description: String,
         rating: Int,
+        ownerNickname: String,
         onSaved: () -> Unit
     ) {
         viewModelScope.launch {
-            diveDao.insert(
-                Dive(
-                    spotName = spotName,
-                    heightMeters = heightMeters,
-                    latitude = latitude,
-                    longitude = longitude,
-                    timestampMillis = System.currentTimeMillis(),
-                    method = DiveMethod.MANUAL,
-                    description = description,
-                    rating = rating,
-                    ownerNickname = UserPreferences.getNickname(getApplication<Application>()) ?: ""
-                )
+            DiveRepository.insertDive(
+                spotName = spotName,
+                heightMeters = heightMeters,
+                latitude = latitude,
+                longitude = longitude,
+                method = DiveMethod.MANUAL,
+                description = description,
+                rating = rating,
+                ownerNickname = ownerNickname
             )
             onSaved()
         }

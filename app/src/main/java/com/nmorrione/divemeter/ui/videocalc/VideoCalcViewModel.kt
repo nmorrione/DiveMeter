@@ -1,42 +1,33 @@
 package com.nmorrione.divemeter.ui.videocalc
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nmorrione.divemeter.data.Dive
-import com.nmorrione.divemeter.data.DiveMeterDatabase
 import com.nmorrione.divemeter.data.DiveMethod
-import com.nmorrione.divemeter.data.UserPreferences
+import com.nmorrione.divemeter.data.DiveRepository
 import kotlinx.coroutines.launch
 
-class VideoCalcViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val diveDao = DiveMeterDatabase.getInstance(application).diveDao()
+class VideoCalcViewModel : ViewModel() {
 
     fun saveDive(
         spotName: String,
         heightMeters: Double,
         latitude: Double,
         longitude: Double,
-        videoUri: String,
         description: String,
         rating: Int,
+        ownerNickname: String,
         onSaved: () -> Unit
     ) {
         viewModelScope.launch {
-            diveDao.insert(
-                Dive(
-                    spotName = spotName,
-                    heightMeters = heightMeters,
-                    latitude = latitude,
-                    longitude = longitude,
-                    timestampMillis = System.currentTimeMillis(),
-                    method = DiveMethod.VIDEO,
-                    videoUri = videoUri,
-                    description = description,
-                    rating = rating,
-                    ownerNickname = UserPreferences.getNickname(getApplication<Application>()) ?: ""
-                )
+            DiveRepository.insertDive(
+                spotName = spotName,
+                heightMeters = heightMeters,
+                latitude = latitude,
+                longitude = longitude,
+                method = DiveMethod.VIDEO,
+                description = description,
+                rating = rating,
+                ownerNickname = ownerNickname
             )
             onSaved()
         }

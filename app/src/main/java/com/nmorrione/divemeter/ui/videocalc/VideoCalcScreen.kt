@@ -33,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.LatLng
 import com.nmorrione.divemeter.R
+import com.nmorrione.divemeter.data.UserPreferences
 import com.nmorrione.divemeter.ui.common.LocationPickerSection
 import com.nmorrione.divemeter.ui.common.StarRating
 import java.util.Locale
@@ -58,6 +60,7 @@ fun VideoCalcScreen(
     onNavigateBack: () -> Unit,
     viewModel: VideoCalcViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var videoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var apexMs by rememberSaveable { mutableStateOf<Long?>(null) }
     var entryMs by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -224,9 +227,9 @@ fun VideoCalcScreen(
                                 height,
                                 location.latitude,
                                 location.longitude,
-                                currentVideoUri.toString(),
                                 description,
                                 rating,
+                                UserPreferences.getNickname(context) ?: "",
                                 onNavigateBack
                             )
                         }

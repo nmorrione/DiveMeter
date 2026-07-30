@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.LatLng
 import com.nmorrione.divemeter.R
+import com.nmorrione.divemeter.data.UserPreferences
 import com.nmorrione.divemeter.ui.common.LocationPickerSection
 import com.nmorrione.divemeter.ui.common.StarRating
 
@@ -42,6 +44,7 @@ fun ManualEntryScreen(
     onNavigateBack: () -> Unit,
     viewModel: ManualEntryViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var spotName by rememberSaveable { mutableStateOf("") }
     var heightText by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
@@ -124,6 +127,7 @@ fun ManualEntryScreen(
                             location.longitude,
                             description,
                             rating,
+                            UserPreferences.getNickname(context) ?: "",
                             onNavigateBack
                         )
                     }

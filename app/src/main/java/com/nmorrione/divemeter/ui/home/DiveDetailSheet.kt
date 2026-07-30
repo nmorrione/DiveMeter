@@ -3,6 +3,8 @@ package com.nmorrione.divemeter.ui.home
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -16,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.nmorrione.divemeter.R
 import com.nmorrione.divemeter.data.Dive
 import com.nmorrione.divemeter.data.DiveMethod
+import com.nmorrione.divemeter.data.DiveRepository
 import com.nmorrione.divemeter.ui.common.StarRating
 import java.text.DateFormat
 import java.util.Date
@@ -23,8 +26,9 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiveDetailSheet(dive: Dive, onDismiss: () -> Unit) {
+fun DiveDetailSheet(dive: Dive, onDismiss: () -> Unit, onDelete: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
+    val isOwner = dive.ownerId.isNotEmpty() && dive.ownerId == DiveRepository.currentUserId()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
@@ -73,8 +77,18 @@ fun DiveDetailSheet(dive: Dive, onDismiss: () -> Unit) {
                 text = stringResource(R.string.dive_detail_added_by_on, ownerLabel, dateLabel),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = if (isOwner) 8.dp else 24.dp)
             )
+
+            if (isOwner) {
+                Button(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                ) {
+                    Text(stringResource(R.string.dive_detail_delete))
+                }
+            }
         }
     }
 }
